@@ -85,6 +85,7 @@ Band *getCurrentBand() { return(&bands[bandIdx]); }
 #define MENU_AVC         10
 #define MENU_SOFTMUTE    11
 #define MENU_SETTINGS    12
+#define MENU_SBATS       13
 
 int8_t menuIdx = MENU_VOLUME;
 
@@ -103,6 +104,7 @@ static const char *menu[] =
   "AVC",
   "SoftMute",
   "Settings",
+  "SB-ATS",
 };
 
 //
@@ -517,6 +519,18 @@ static void clickScan(bool shortPress)
   else currentCmd = CMD_NONE;
 }
 
+static void clickSbats(bool shortPress) {
+  // Clear stale parameters
+  clearStationInfo();
+  rssi = snr = 0;
+  drawScreen();
+  if(shortPress) {
+    sbatsRun(currentFrequency);
+  } else {
+    currentCmd = CMD_NONE;
+  }
+}
+
 static void doTheme(int16_t enc)
 {
   themeIdx = wrap_range(themeIdx, enc, 0, getTotalThemes() - 1);
@@ -843,6 +857,12 @@ static void clickMenu(int cmd, bool shortPress)
       currentCmd = CMD_SCAN;
       clickScan(true);
       break;
+
+    case MENU_SBATS:
+      // start sweeping the current band with the current step size
+      currentCmd = CMD_SBATS;
+      clickSbats(true);
+      break;
   }
 }
 
@@ -937,6 +957,7 @@ bool clickHandler(uint16_t cmd, bool shortPress)
     case CMD_SQUELCH:  clickSquelch(shortPress);break;
     case CMD_SEEK:     clickSeek(shortPress);break;
     case CMD_SCAN:     clickScan(shortPress);break;
+    case CMD_SBATS:    clickSbats(false);break;
     case CMD_FREQ:     return(clickFreq(shortPress));
     default:           return(false);
   }
@@ -1138,6 +1159,19 @@ static void drawScan(int x, int y, int sx)
   spr.drawLine(40+x+(sx/2)-4, 66+y+5, 40+x+(sx/2), 66+y-16+5, TH.menu_param);
   spr.drawLine(40+x+(sx/2), 66+y-16+5, 40+x+(sx/2)+4, 66+y+5, TH.menu_param);
   spr.drawLine(40+x+(sx/2)+4, 66+y+5, 40+x+(sx/2)+17, 66+y+5, TH.menu_param);
+}
+
+static void drawSbats(int x, int y, int sx) {
+  drawCommon(menu[MENU_SBATS], x, y, sx);
+//  spr.setTextDatum(MC_DATUM);
+  spr.drawSmoothArc(40+x+(sx/2), 66+y, 30, 27, 45, 180, TH.menu_param, TH.menu_bg);
+  spr.fillTriangle(40+x+(sx/2)-5, 66+y-32, 40+x+(sx/2)+5, 66+y-27, 40+x+(sx/2)-5, 66+y-22, TH.menu_param);
+  spr.drawSmoothArc(40+x+(sx/2), 66+y, 30, 27, 225, 360, TH.menu_param, TH.menu_bg);
+  spr.fillTriangle(40+x+(sx/2)+5, 66+y+32, 40+x+(sx/2)-5, 66+y+27, 40+x+(sx/2)+5, 66+y+22, TH.menu_param);
+  spr.drawLine(40+x+(sx/2)-17, 66+y+5, 40+x+(sx/2)-4, 66+y+5, TH.scan_snr);
+  spr.drawLine(40+x+(sx/2)-4, 66+y+5, 40+x+(sx/2), 66+y-16+5, TH.scan_snr);
+  spr.drawLine(40+x+(sx/2), 66+y-16+5, 40+x+(sx/2)+4, 66+y+5, TH.scan_snr);
+  spr.drawLine(40+x+(sx/2)+4, 66+y+5, 40+x+(sx/2)+17, 66+y+5, TH.scan_snr);
 }
 
 static void drawBand(int x, int y, int sx)
@@ -1625,6 +1659,7 @@ void drawSideBar(uint16_t cmd, int x, int y, int sx)
     case CMD_STEP:      drawStep(x, y, sx);      break;
     case CMD_SEEK:      drawSeek(x, y, sx);      break;
     case CMD_SCAN:      drawScan(x, y, sx);      break;
+    case CMD_SBATS:     drawSbats(x, y, sx);     break;
     case CMD_BAND:      drawBand(x, y, sx);      break;
     case CMD_BANDWIDTH: drawBandwidth(x, y, sx); break;
     case CMD_THEME:     drawTheme(x, y, sx);     break;
