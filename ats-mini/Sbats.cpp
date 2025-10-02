@@ -17,17 +17,17 @@ static bool     sbatsRev = false;
 
 static void sbatsInit(uint16_t freq) {
   const Band *band = getCurrentBand();
+  const Step *step = getCurrentStep();
   sbatsCurFreq      = freq;
   sbatsMinFreq      = band->minimumFreq;
   sbatsMaxFreq      = band->maximumFreq;
-  sbatsStep         = 10;
+  sbatsStep         = step->step;
   sbatsTime         = millis();
   sbatsPress        = 0;
-  if(band->bandName == "VHF") {           // FM band limits & step for north america
+  if(band->bandName == "VHF") {           // override FM band limits for north america
     sbatsMinFreq    = 8710;
     sbatsMaxFreq    = 10790;
-    sbatsStep       = 20;
-  } else if(band->bandName == "MW1") {    // AM band limits & step for north america
+  } else if(band->bandName == "MW1") {    // override AM band limits for north america
     sbatsMinFreq    = 500;
   }
   // clear parts of the screen  (screen size 320 x 170)
