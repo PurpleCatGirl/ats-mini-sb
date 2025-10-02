@@ -30,7 +30,7 @@ static void sbatsInit(uint16_t freq) {
   } else if(band->bandName == "MW1") {    // AM band limits & step for north america
     sbatsMinFreq    = 500;
   }
-  // clear most of the screen  (screen size 320 x 170)
+  // clear parts of the screen  (screen size 320 x 170)
   spr.fillRect(90, 0, 240, 15, TH.bg);     // above band/mode, right of the sidebar
   spr.fillRect(90, 90, 240, 80, TH.bg);    // under frequency, right of sidebar
   spr.fillRect(0, 115, 320, 55, TH.bg);    // bottom area, full width
