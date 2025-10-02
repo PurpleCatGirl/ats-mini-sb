@@ -91,8 +91,6 @@ static bool sbatsMainLoop() {
 
 // Run sb-ats
 void sbatsRun(uint16_t originalFreq) {
-  // Scan the whole range
-//  for(sbatsInit(originalFreq) ; sbatsMainLoop(););
   // initialize SB-ATS
   sbatsInit(originalFreq);
   // run the main loop until it returns false
