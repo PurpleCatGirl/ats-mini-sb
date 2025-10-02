@@ -185,6 +185,9 @@ void scanRun(uint16_t centerFreq, uint16_t step);
 float scanGetRSSI(uint16_t freq);
 float scanGetSNR(uint16_t freq);
 
+// Sbats.c
+void sbatsRun(uint16_t originalFreq);
+
 // Station.c
 const char *getStationName();
 const char *getRadioText();
