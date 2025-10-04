@@ -46,7 +46,7 @@ static bool sbatsMainLoop() {
       if(delta > 375) {                              // longish press
         sbatsRev = !sbatsRev;                        // reverse direction
       } else if(delta > 30) {                        // click
-        currentCmd = CMD_NONE;                       // cancel SBATS mode
+        currentCmd = CMD_NONE;                       // cancel sb-ats mode
       }
       sbatsPress=0;                                  // clear press
       delay(10);                                     // debounce
@@ -55,10 +55,7 @@ static bool sbatsMainLoop() {
     sbatsPress = millis();                           // set encoder pressed
     delay(10);                                       // debounce
   }
-  // EXPERIMENTAL check for encoder rotation to change scan direction
-  // NOTE: encoder clicks will still accumulate in ats-mini.ino
-  // NOTE: so originalFreq will be lost when sb-ats function ends
-  // NOTE: this is flakey af but it gets the job done
+  // EXPERIMENTAL use encoder rotation to change scan direction (jank af but it works)
   if((digitalRead(ENCODER_PIN_A)==HIGH) && (digitalRead(ENCODER_PIN_B)==LOW)) {
     sbatsRev=false;                                  // scan forwards
     delay(25);                                       // debounce
@@ -66,18 +63,15 @@ static bool sbatsMainLoop() {
     sbatsRev=true;                                   // scan backwards
     delay(25);                                       // debounce
   }
-  // SB-ATS must be the active command
-  if(currentCmd != CMD_SBATS) return(false);
-  // Wait for the right time
+  // wait for the timer to reach the specified delay
   if(millis() - sbatsTime < SBATS_POLL_TIME) return(true);
-  // check the tuning status, make sure its finished what it was doing
+  if(currentCmd != CMD_SBATS) return(false);         // abort if sb-ats inactive
   rx.getStatus(0, 0);
-  if(!rx.getTuneCompleteTriggered()) {
-    sbatsTime = millis(); // reset the clock
+  if(!rx.getTuneCompleteTriggered()) {               // only proceed if its done tuning
+    sbatsTime = millis();                            // reset the timer
     return(true);
   }
-  // if we're already tuned to the desired freq then increment
-  if(rx.getCurrentFrequency() == sbatsCurFreq) {
+  if(rx.getCurrentFrequency() == sbatsCurFreq) {     // pick new freq when ready
     if(sbatsRev) {
       sbatsCurFreq -= sbatsStep;
       if(sbatsCurFreq < sbatsMinFreq) sbatsCurFreq = sbatsMaxFreq;
@@ -86,15 +80,13 @@ static bool sbatsMainLoop() {
       if(sbatsCurFreq > sbatsMaxFreq) sbatsCurFreq = sbatsMinFreq;
     }
   }
-  // set the tuner to the new / correct frequency
-  rx.setFrequency(sbatsCurFreq);
-  // now update the display
-  spr.fillRect(100, 35, 152, 52, TH.bg);
-  spr.fillRect(0, 115, 320, 55, TH.bg);
+  rx.setFrequency(sbatsCurFreq);                     // set tuner to new frequency
+  spr.fillRect(100, 35, 152, 52, TH.bg);             // update display for new frequency
+  spr.fillRect(0, 115, 320, 55, TH.bg);              // and adjust the scale at the bottom
   drawFrequency(sbatsCurFreq, FREQ_OFFSET_X, FREQ_OFFSET_Y, FUNIT_OFFSET_X, FUNIT_OFFSET_Y, 100);
   drawScale(sbatsCurFreq);
-  spr.pushSprite(0, 0);
-  sbatsTime = millis(); // reset the clock
+  spr.pushSprite(0, 0);                              // push screen updates to screen
+  sbatsTime = millis();                              // reset the timer
   return(true);
 }
 
