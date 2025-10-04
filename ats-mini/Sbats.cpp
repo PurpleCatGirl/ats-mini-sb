@@ -44,16 +44,27 @@ static bool sbatsMainLoop() {
     if(digitalRead(ENCODER_PUSH_BUTTON)==HIGH) {     // encoder released
       uint32_t delta = millis() - sbatsPress;
       if(delta > 375) {                              // longish press
-        currentCmd = CMD_NONE;                       // cancel SBATS mode
-      } else if(delta > 20) {                        // click
         sbatsRev = !sbatsRev;                        // reverse direction
+      } else if(delta > 30) {                        // click
+        currentCmd = CMD_NONE;                       // cancel SBATS mode
       }
       sbatsPress=0;                                  // clear press
-      delay(5);
+      delay(10);                                     // debounce
     }
   } else if(digitalRead(ENCODER_PUSH_BUTTON)==LOW) { // encoder pressed
     sbatsPress = millis();                           // set encoder pressed
-    delay(5);
+    delay(10);                                       // debounce
+  }
+  // EXPERIMENTAL check for encoder rotation to change scan direction
+  // NOTE: encoder clicks will still accumulate in ats-mini.ino
+  // NOTE: so originalFreq will be lost when sb-ats function ends
+  // NOTE: this is flakey af but it gets the job done
+  if((digitalRead(ENCODER_PIN_A)==HIGH) && (digitalRead(ENCODER_PIN_B)==LOW)) {
+    sbatsRev=false;                                  // scan forwards
+    delay(25);                                       // debounce
+  } else if((digitalRead(ENCODER_PIN_A)==LOW) && (digitalRead(ENCODER_PIN_B)==HIGH)) {
+    sbatsRev=true;                                   // scan backwards
+    delay(25);                                       // debounce
   }
   // SB-ATS must be the active command
   if(currentCmd != CMD_SBATS) return(false);
